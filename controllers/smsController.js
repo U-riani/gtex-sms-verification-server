@@ -8,24 +8,40 @@ export const sendOtp = async (req, res) => {
   try {
     const { phoneNumber } = req.body;
 
-    if (!phoneNumber)
-      return res.status(400).json({ error: "Phone number required" });
+    if (!phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        error: "Phone number is required",
+      });
+    }
 
     // Call GoSMS OTP API
     const result = await sms.sendOtp(phoneNumber);
 
-    console.log("OTP sent:", result);
+    console.log(`OTP sent: ${JSON.stringify(result)}`);
+
+    if (!result.hash) {
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate OTP hash",
+      });
+    }
 
     // result.hash MUST be stored on your server, tied to phoneNumber  //265178 766956
     return res.json({
       success: true,
-      hash: result.hash,
-      balance: result.balance,
+      data: {
+        hash: result.hash,
+        balance: result.balance,
+      },
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message });
-  } 
+    console.error(`Error sending OTP: ${err.message}`, err);
+    return res.status(500).json({
+      success: false,
+      error: `Failed to send OTP: ${err.message}`,
+    });
+  }
 };
 
 export const verifyOtp = async (req, res) => {

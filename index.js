@@ -23,14 +23,14 @@ app.use(
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-    optionsSuccessStatus: 200,
+    optionsSuccessStatus: 204,
   })
 );
 
+
 // Parse JSON bodies
 app.use(express.json());
-
+ 
 // Log requests for debugging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url} from ${req.headers.origin}`);
