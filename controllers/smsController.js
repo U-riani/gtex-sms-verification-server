@@ -2,7 +2,7 @@ import { SMS } from "@gosmsge/gosmsge-node";
 import dotenv from "dotenv";
 dotenv.config();
 
-const sms = new SMS(process.env.GOSMS_API_KEY);
+const sms = new SMS(process.env.GTEX_API_KEY);
 
 export const sendOtp = async (req, res) => {
   try {
@@ -16,7 +16,7 @@ export const sendOtp = async (req, res) => {
 
     console.log("OTP sent:", result);
 
-    // result.hash MUST be stored on your server, tied to phoneNumber
+    // result.hash MUST be stored on your server, tied to phoneNumber  //265178 766956
     return res.json({
       success: true,
       hash: result.hash,
@@ -25,7 +25,7 @@ export const sendOtp = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
-  }
+  } 
 };
 
 export const verifyOtp = async (req, res) => {
