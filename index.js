@@ -13,7 +13,19 @@ import userRoutes from "./routes/userRoutes.js";
 connectDB();
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://gtex-sms-verification.netlify.app",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+app.options("*", cors()); 
+
 app.use(express.json());
 
 // 5) Connect to MongoDB
