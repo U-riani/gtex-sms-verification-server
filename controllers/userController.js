@@ -184,7 +184,7 @@ export const getPaginatedUsers = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res
+    res 
       .status(500)
       .json({ error: "Failed to fetch users", message: err.message });
   }

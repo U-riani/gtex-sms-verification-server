@@ -22,7 +22,7 @@ app.use(
       "https://gtex-sms-verification.netlify.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "application/json"],
     optionsSuccessStatus: 204,
   })
 );
