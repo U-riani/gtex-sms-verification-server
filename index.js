@@ -43,10 +43,6 @@ app.use(
   })
 );
 
-// 🔥 HARD STOP OPTIONS FOR THIS ROUTER
-app.options("(.*)", (req, res) => {
-  res.sendStatus(204);
-});
 
 // Debug logging
 app.use((req, res, next) => {
