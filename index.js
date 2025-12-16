@@ -12,24 +12,26 @@ connectDB();
 
 const app = express();
 
-// 🔥 HARD STOP for preflight (Express 5 fix)
-app.use((req, res, next) => {
-  if (req.method === "OPTIONS") {
-    res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-    res.header(
-      "Access-Control-Allow-Methods",
-      "GET,POST,PUT,DELETE,OPTIONS"
-    );
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
-    );
-    return res.sendStatus(204);
-  }
-  next();
-});
+// // 🔥 HARD STOP for preflight (Express 5 fix)
+// app.use((req, res, next) => {
+//   if (req.method === "OPTIONS") {
+//     res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+//     res.header(
+//       "Access-Control-Allow-Methods",
+//       "GET,POST,PUT,DELETE,OPTIONS"
+//     );
+//     res.header(
+//       "Access-Control-Allow-Headers",
+//       "Content-Type, Authorization"
+//     );
+//     return res.sendStatus(204);
+//   }
+//   next();
+// });
 
 // ✅ CORS middleware
+app.use(express.json());
+
 app.use(
   cors({
     origin: [
@@ -41,7 +43,10 @@ app.use(
   })
 );
 
-app.use(express.json());
+// 🔥 HARD STOP OPTIONS FOR THIS ROUTER
+router.options("(.*)", (req, res) => {
+  res.sendStatus(204);
+});
 
 // Debug logging
 app.use((req, res, next) => {

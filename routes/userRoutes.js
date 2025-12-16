@@ -8,10 +8,7 @@ import {
 } from "../controllers/userController.js";
 
 const router = express.Router();
-// 🔥 HARD STOP OPTIONS FOR THIS ROUTER
-router.options("*", (req, res) => {
-  res.sendStatus(204);
-});
+
 router.post("/register", registerUser);
 router.get("/", getAllUsers);
 router.get("/paginated", getPaginatedUsers);
