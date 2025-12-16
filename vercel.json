@@ -1,17 +1,17 @@
 {
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index"
+      "source": "/(.*)",
+      "destination": "/index"
     },
     {
       "source": "/(.*)",
-      "destination": "/api/index"
+      "destination": "/index"
     }
   ],
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/(.*)",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
