@@ -4,7 +4,6 @@ const userSchema = new mongoose.Schema(
   {
     branch: {
       type: String,
-      enum: ["tbilisi", "batumi"],
       required: true,
     },
     brands: [String],

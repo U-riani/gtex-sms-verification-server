@@ -36,7 +36,7 @@ export const registerUser = async (req, res) => {
         },
       },
     };
-
+    console.log(req.body.branch)
     const user = new User(data);
     await user.save();
 

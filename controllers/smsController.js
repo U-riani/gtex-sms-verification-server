@@ -14,7 +14,7 @@ export const sendOtp = async (req, res) => {
     // Call GoSMS OTP API
     const result = await sms.sendOtp(phoneNumber);
 
-    console.log("OTP sent:", result);
+    console.log("OTP sent:", result); 
 
     // result.hash MUST be stored on your server, tied to phoneNumber  //265178 766956
     return res.json({
