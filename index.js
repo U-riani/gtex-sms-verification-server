@@ -7,6 +7,10 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import smsRoutes from "./routes/smsRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import adminAuthRoutes from "./routes/adminAuthRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import adminSmsRoutes from "./routes/adminSmsRoutes.js";
+
 
 connectDB();
 
@@ -44,7 +48,6 @@ app.use(
   })
 );
 
-
 // Debug logging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url} from ${req.headers.origin}`);
@@ -53,6 +56,10 @@ app.use((req, res, next) => {
 
 app.use("/api/sms", smsRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/admin", adminAuthRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/admin", adminSmsRoutes);
+
 
 app.get("/", (req, res) => {
   res.json({ message: "title2" });

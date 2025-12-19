@@ -36,7 +36,7 @@ export const registerUser = async (req, res) => {
         },
       },
     };
-    console.log(req.body.branch)
+    console.log(req.body.branch);
     const user = new User(data);
     await user.save();
 
@@ -159,33 +159,70 @@ export const getUser = async (req, res) => {
 
 export const getPaginatedUsers = async (req, res) => {
   try {
-    // page=1, limit=20 are defaults
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
-
-    // how many to skip
     const skip = (page - 1) * limit;
 
-    const users = await User.find()
-      .sort({ createdAt: -1 }) // newest first (optional)
+    const filter = {};
+
+    // TEXT FIELDS (case-insensitive, partial)
+    if (req.query.firstName) {
+      filter.firstName = { $regex: req.query.firstName, $options: "i" };
+    }
+
+    if (req.query.lastName) {
+      filter.lastName = { $regex: req.query.lastName, $options: "i" };
+    }
+
+    if (req.query.phone) {
+      filter.phone = { $regex: req.query.phone, $options: "i" };
+    }
+
+    if (req.query.email) {
+      filter.email = { $regex: req.query.email, $options: "i" };
+    }
+
+    if (req.query.city) {
+      filter.city = { $regex: req.query.city, $options: "i" };
+    }
+
+    // PROMO CHANNELS
+    if (req.query.sms === "true") {
+      filter["promoChannels.sms.enabled"] = true;
+    }
+    if (req.query.sms === "false") {
+      filter["promoChannels.sms.enabled"] = false;
+    }
+
+    if (req.query.emailPromo === "true") {
+      filter["promoChannels.email.enabled"] = true;
+    }
+    if (req.query.emailPromo === "false") {
+      filter["promoChannels.email.enabled"] = false;
+    }
+
+    // BRAND
+    if (req.query.brand) {
+      filter.brands = req.query.brand;
+    }
+
+    const users = await User.find(filter)
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .select("-__v");
 
-    const total = await User.countDocuments();
+    const total = await User.countDocuments(filter);
 
-    return res.json({
+    res.json({
       success: true,
       page,
-      limit,
       totalUsers: total,
       totalPages: Math.ceil(total / limit),
       users,
     });
   } catch (err) {
-    console.log(err);
-    res 
-      .status(500)
-      .json({ error: "Failed to fetch users", message: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch users" });
   }
 };
