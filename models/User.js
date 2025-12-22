@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema(
   {
     branch: {
       type: String,
-      required: true,
+      default: "Web",
     },
     brands: [String],
     gender: String,
