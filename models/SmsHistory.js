@@ -3,9 +3,16 @@ import mongoose from "mongoose";
 
 const SmsHistorySchema = new mongoose.Schema(
   {
-    campaignId: mongoose.Schema.Types.ObjectId,
+    campaignId: {
+      type: String,
+      index: true,
+    },
 
-    brand: String,
+    brand: {
+      type: String,
+      index: true,
+    },
+
     brandLabel: String,
     sender: String,
 
@@ -24,10 +31,19 @@ const SmsHistorySchema = new mongoose.Schema(
       enum: ["sent", "failed"],
       index: true,
     },
+    channel: {
+      type: String,
+      enum: ["sms", "whatsapp", "email"],
+      required: true,
+      index: true,
+    },
 
     error: String,
   },
   { timestamps: true }
 );
+
+// 🔥 index createdAt properly (without redefining it)
+SmsHistorySchema.index({ createdAt: -1 });
 
 export default mongoose.model("SmsHistory", SmsHistorySchema);

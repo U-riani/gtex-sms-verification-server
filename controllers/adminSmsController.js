@@ -1,34 +1,31 @@
-// server/controllers/adminSmsController.js
-
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import { SMS } from "@gosmsge/gosmsge-node";
 import { SMS_BRANDS } from "../config/smsBrands.js";
 import SmsHistory from "../models/SmsHistory.js";
+import { sendEmail } from "../services/senders/emailSender.js";
 
 const normalizePhone = (phone) => {
   if (!phone) return null;
-
-  let p = phone.toString().trim();
-  p = p.replace(/\s+/g, "");
-  p = p.replace(/^\+/, "");
-
-  if (!p.startsWith("995")) return null;
-  if (p.length !== 12) return null;
-
+  let p = phone.toString().trim().replace(/\s+/g, "").replace(/^\+/, "");
+  if (!p.startsWith("995") || p.length !== 12) return null;
   return p;
 };
 
-const applyVariables = (template, user, brandLabel) => {
-  return template
+const applyVariables = (template, user, brandLabel) =>
+  template
     .replace(/{firstName}/gi, user.firstName || "")
     .replace(/{lastName}/gi, user.lastName || "")
     .replace(/{brand}/gi, brandLabel || "");
-};
 
 export const sendBulkSms = async (req, res) => {
   try {
-    const { userIds, message, brand } = req.body;
+    const {
+      userIds,
+      message,
+      brand,
+      channels = ["sms"],
+    } = req.body;
 
     if (!SMS_BRANDS[brand]) {
       return res.status(400).json({ error: "Invalid brand selected" });
@@ -42,92 +39,101 @@ export const sendBulkSms = async (req, res) => {
       return res.status(400).json({ error: "Message is required" });
     }
 
+    const allowedChannels = ["sms", "email", "whatsapp"];
+    for (const ch of channels) {
+      if (!allowedChannels.includes(ch)) {
+        return res.status(400).json({ error: `Invalid channel: ${ch}` });
+      }
+    }
+
     const { apiKey, sender, label } = SMS_BRANDS[brand];
-    const sms = new SMS(apiKey);
+    const smsClient = new SMS(apiKey);
 
     const users = await User.find({
       _id: { $in: userIds },
-      "promoChannels.sms.enabled": true,
-      phone: { $ne: null },
-    }).select("phone firstName lastName");
+    }).select("phone email firstName lastName promoChannels");
 
-    if (users.length === 0) {
-      return res.status(400).json({
-        error: "No users with SMS enabled and valid phone numbers",
-      });
-    }
-
-    // 🧠 Campaign grouping (future analytics, retries)
     const campaignId = new mongoose.Types.ObjectId();
     const createdAt = new Date();
 
     const results = [];
 
-    for (const u of users) {
-      const phone = normalizePhone(u.phone);
+    for (const user of users) {
+      for (const channel of channels) {
+        let finalMessage = applyVariables(message, user, label);
 
-      if (!phone) {
-        await SmsHistory.create({
-          campaignId,
-          brand,
-          brandLabel: label,
-          sender,
-          userId: u._id,
-          phone: u.phone,
-          templateMessage: message,
-          finalMessage: message,
-          status: "failed",
-          error: "Invalid phone format",
-          createdAt,
-        });
+        try {
+          // 🔐 CONSENT CHECK
+          if (
+            channel === "sms" &&
+            !user.promoChannels?.sms?.enabled
+          ) {
+            throw new Error("SMS consent not given");
+          }
 
-        results.push({
-          phone: u.phone,
-          success: false,
-          error: "Invalid phone format",
-        });
-        continue;
-      }
+          if (
+            channel === "email" &&
+            !user.promoChannels?.email?.enabled
+          ) {
+            throw new Error("Email consent not given");
+          }
 
-      const finalMessage = applyVariables(message, u, label);
+          // 🚀 SEND
+          if (channel === "sms") {
+            const phone = normalizePhone(user.phone);
+            if (!phone) throw new Error("Invalid phone format");
 
-      try {
-        await sms.send(phone, finalMessage, sender);
+            await smsClient.send(phone, finalMessage, sender);
+          }
 
-        await SmsHistory.create({
-          campaignId,
-          brand,
-          brandLabel: label,
-          sender,
-          userId: u._id,
-          phone,
-          templateMessage: message,
-          finalMessage,
-          status: "sent",
-          createdAt,
-        });
+          if (channel === "email") {
+            await sendEmail(
+              { sender, subject: `${label} Notification` },
+              user,
+              finalMessage
+            );
+          }
 
-        results.push({ phone, success: true });
-      } catch (err) {
-        await SmsHistory.create({
-          campaignId,
-          brand,
-          brandLabel: label,
-          sender,
-          userId: u._id,
-          phone,
-          templateMessage: message,
-          finalMessage,
-          status: "failed",
-          error: err.message,
-          createdAt,
-        });
+          // 🧾 HISTORY — SENT
+          await SmsHistory.create({
+            campaignId,
+            brand,
+            brandLabel: label,
+            sender,
+            channel,
+            userId: user._id,
+            phone: channel === "sms" ? user.phone : user.email,
+            templateMessage: message,
+            finalMessage,
+            status: "sent",
+            createdAt,
+          });
 
-        results.push({
-          phone,
-          success: false,
-          error: err.message,
-        });
+          results.push({ userId: user._id, channel, success: true });
+        } catch (err) {
+          // 🧾 HISTORY — FAILED
+          await SmsHistory.create({
+            campaignId,
+            brand,
+            brandLabel: label,
+            sender,
+            channel,
+            userId: user._id,
+            phone: user.phone || user.email,
+            templateMessage: message,
+            finalMessage,
+            status: "failed",
+            error: err.message,
+            createdAt,
+          });
+
+          results.push({
+            userId: user._id,
+            channel,
+            success: false,
+            error: err.message,
+          });
+        }
       }
     }
 
@@ -139,7 +145,7 @@ export const sendBulkSms = async (req, res) => {
       results,
     });
   } catch (err) {
-    console.error("Bulk SMS error:", err);
-    res.status(500).json({ error: "Failed to send SMS" });
+    console.error("Bulk message error:", err);
+    res.status(500).json({ error: "Failed to send messages" });
   }
 };

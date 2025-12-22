@@ -12,6 +12,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import adminSmsRoutes from "./routes/adminSmsRoutes.js";
 import adminSmsTemplateRoutes from "./routes/adminSmsTemplateRoutes.js";
 import adminSmsHistoryRoutes from "./routes/adminSmsHistoryRoutes.js";
+import adminSmsCampain from "./routes/adminSmsCampainRoute.js";
 
 
 connectDB();
@@ -63,6 +64,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminSmsRoutes);
 app.use("/api/admin/sms/templates", adminSmsTemplateRoutes);
 app.use("/api/admin", adminSmsHistoryRoutes);
+app.use("/api/admin", adminSmsCampain);
 
 
 app.get("/", (req, res) => {
