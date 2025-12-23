@@ -1,5 +1,6 @@
 import { SMS } from "@gosmsge/gosmsge-node";
 import dotenv from "dotenv";
+import User from "../models/User.js";
 dotenv.config();
 
 const sms = new SMS(process.env.GTEX_API_KEY);
@@ -7,14 +8,23 @@ const sms = new SMS(process.env.GTEX_API_KEY);
 export const sendOtp = async (req, res) => {
   try {
     const { phoneNumber } = req.body;
-
     if (!phoneNumber)
       return res.status(400).json({ error: "Phone number required" });
 
-    // Call GoSMS OTP API
+    // 🔍 1. Check if user already exists
+    const existingUser = await User.findOne({ phone: phoneNumber }).lean();
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        error: "Phone number already registered",
+      });
+    }
+
+    // // 📲 2. Send OTP
     const result = await sms.sendOtp(phoneNumber);
 
-    console.log("OTP sent:", result); 
+    console.log("OTP sent:", result);
 
     // result.hash MUST be stored on your server, tied to phoneNumber  //265178 766956
     return res.json({
@@ -25,7 +35,7 @@ export const sendOtp = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
-  } 
+  }
 };
 
 export const verifyOtp = async (req, res) => {
