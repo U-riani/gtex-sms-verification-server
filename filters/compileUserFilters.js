@@ -52,27 +52,20 @@ export function compileGroup(group) {
 export function compileAdvancedFilter(filter) {
   if (!filter?.groups?.length) return {};
 
-  const compiled = [];
+  const mongo = [];
+  let current = compileGroup(filter.groups[0]);
 
-  filter.groups.forEach((group, index) => {
-    const compiledGroup = compileGroup(group);
-    if (!compiledGroup) return;
+  for (let i = 1; i < filter.groups.length; i++) {
+    const prevLogic = filter.groups[i - 1].logic || "AND";
+    const next = compileGroup(filter.groups[i]);
+    if (!next) continue;
 
-    if (index === 0) {
-      compiled.push(compiledGroup);
-      return;
+    if (prevLogic === "OR") {
+      current = { $or: [current, next] };
+    } else {
+      current = { $and: [current, next] };
     }
+  }
 
-    const prevLogic = filter.groups[index - 1].logic || "AND";
-
-    const last = compiled.pop();
-
-    compiled.push(
-      prevLogic === "OR"
-        ? { $or: [last, compiledGroup] }
-        : { $and: [last, compiledGroup] }
-    );
-  });
-
-  return compiled[0] || {};
+  return current || {};
 }
