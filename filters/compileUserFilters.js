@@ -37,16 +37,43 @@ export function compileCondition(cond) {
   }
 }
 
+// export function compileGroup(group) {
+//   const compiledConditions = group.conditions
+//     .map(compileCondition)
+//     .filter(Boolean);
+
+//   if (!compiledConditions.length) return null;
+
+//   return group.logic === "OR"
+//     ? { $or: compiledConditions }
+//     : { $and: compiledConditions };
+// }
 export function compileGroup(group) {
-  const compiledConditions = group.conditions
-    .map(compileCondition)
-    .filter(Boolean);
+  if (!group.conditions?.length) return null;
 
-  if (!compiledConditions.length) return null;
+  let current = null;
 
-  return group.logic === "OR"
-    ? { $or: compiledConditions }
-    : { $and: compiledConditions };
+  for (let i = 0; i < group.conditions.length; i++) {
+    const cond = group.conditions[i];
+    const compiled = compileCondition(cond);
+
+    if (!compiled) continue;
+
+    if (current === null) {
+      current = compiled;
+      continue;
+    }
+
+    const prevLogic = group.conditions[i - 1]?.logic || "AND";
+
+    if (prevLogic === "OR") {
+      current = { $or: [current, compiled] };
+    } else {
+      current = { $and: [current, compiled] };
+    }
+  }
+
+  return current;
 }
 
 export function compileAdvancedFilter(filter) {
