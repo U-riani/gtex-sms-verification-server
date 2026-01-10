@@ -7,6 +7,7 @@ import {
   listSegments,
   removeUserFromSegment,
   addUsersToSegment,
+  undoRemoveUserFromSegment,
 } from "../controllers/segmentController.js";
 import { requireAdmin } from "../middlewares/adminAuth.js";
 
@@ -17,6 +18,7 @@ router.use(requireAdmin);
 router.get("/", listSegments);
 router.get("/:id/users", getSegmentUsers);
 router.post("/", createSegment);
+router.post("/undo", undoRemoveUserFromSegment);
 router.post("/:id/users", addUsersToSegment);
 router.delete("/:segmentId/users/:userId", removeUserFromSegment);
 router.delete("/:id", deleteSegment);

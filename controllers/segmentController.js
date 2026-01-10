@@ -1,8 +1,8 @@
 // controllers/segmentController.js
 import mongoose from "mongoose";
-import User from "../models/User.js";
 import SegmentUser from "../models/SegmentUser.js";
 import Segment from "../models/Segment.js";
+import crypto from "crypto";
 
 export const createSegment = async (req, res) => {
   const { name, userIds = [] } = req.body;
@@ -23,6 +23,18 @@ export const createSegment = async (req, res) => {
   });
 
   if (validIds.length) {
+    await SegmentUser.updateMany(
+      {
+        segmentId: segment._id,
+        userId: { $in: validIds },
+        deletedAt: { $ne: null },
+      },
+      {
+        $set: { deletedAt: null },
+        $unset: { deleteToken: "" },
+      }
+    );
+
     const rows = validIds.map((uid) => ({
       segmentId: segment._id,
       userId: uid,
@@ -39,8 +51,24 @@ export const listSegments = async (req, res) => {
     {
       $lookup: {
         from: "segmentusers",
-        localField: "_id",
-        foreignField: "segmentId",
+        let: { sid: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$segmentId", "$$sid"] },
+                  {
+                    $or: [
+                      { $eq: ["$deletedAt", null] },
+                      { $not: ["$deletedAt"] },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        ],
         as: "users",
       },
     },
@@ -60,7 +88,10 @@ export const getSegmentUsers = async (req, res) => {
   const { id } = req.params;
   const { page = 1, limit = 20 } = req.query;
 
-  const query = { segmentId: id };
+  const query = {
+    segmentId: id,
+    deletedAt: null,
+  };
 
   const [rows, total] = await Promise.all([
     SegmentUser.find(query)
@@ -80,12 +111,27 @@ export const getSegmentUsers = async (req, res) => {
 };
 
 export const removeUserFromSegment = async (req, res) => {
-  await SegmentUser.deleteOne({
-    segmentId: req.params.segmentId,
-    userId: req.params.userId,
-  });
+  const deleteToken = crypto.randomUUID();
 
-  res.json({ success: true });
+  await SegmentUser.updateOne(
+    {
+      segmentId: req.params.segmentId,
+      userId: req.params.userId,
+      deletedAt: null,
+    },
+    {
+      $set: {
+        deletedAt: new Date(),
+        deleteToken,
+      },
+    }
+  );
+
+  res.json({
+    pending: true,
+    deleteToken,
+    undoUntil: Date.now() + 5 * 60 * 1000,
+  });
 };
 
 export const deleteSegment = async (req, res) => {
@@ -103,24 +149,50 @@ export const addUsersToSegment = async (req, res) => {
     return res.status(400).json({ message: "userIds must be array" });
   }
 
-  const validIds = userIds.filter((id) =>
-    mongoose.Types.ObjectId.isValid(id)
-  );
+  const validIds = userIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
 
   if (!validIds.length) {
     return res.json({ added: 0 });
   }
+
+  await SegmentUser.updateMany(
+    {
+      segmentId: id,
+      userId: { $in: validIds },
+      deletedAt: { $ne: null },
+    },
+    {
+      $set: { deletedAt: null },
+      $unset: { deleteToken: "" },
+    }
+  );
 
   const rows = validIds.map((uid) => ({
     segmentId: id,
     userId: uid,
   }));
 
-  const result = await SegmentUser.insertMany(rows, {
-    ordered: false,
-  }).catch(() => null); // ignore duplicates
+  const result = await SegmentUser.insertMany(rows, { ordered: false }).catch(
+    () => []
+  );
 
   res.json({
-    added: result?.length || 0,
+    added: result.length,
+  });
+};
+
+export const undoRemoveUserFromSegment = async (req, res) => {
+  const { deleteToken } = req.body;
+
+  const result = await SegmentUser.updateOne(
+    { deleteToken },
+    {
+      $set: { deletedAt: null },
+      $unset: { deleteToken: "" },
+    }
+  );
+
+  res.json({
+    restored: result.modifiedCount === 1,
   });
 };
