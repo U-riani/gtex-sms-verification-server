@@ -8,6 +8,7 @@ const sms = new SMS(process.env.GTEX_API_KEY);
 export const sendOtp = async (req, res) => {
   try {
     const { phoneNumber } = req.body;
+    console.log(phoneNumber)
     if (!phoneNumber)
       return res.status(400).json({ error: "Phone number required" });
 

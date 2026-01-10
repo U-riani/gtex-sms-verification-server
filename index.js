@@ -13,7 +13,8 @@ import adminSmsRoutes from "./routes/adminSmsRoutes.js";
 import adminSmsTemplateRoutes from "./routes/adminSmsTemplateRoutes.js";
 import adminSmsHistoryRoutes from "./routes/adminSmsHistoryRoutes.js";
 import adminSmsCampain from "./routes/adminSmsCampainRoute.js";
-
+import filterMetaRoutes from "./routes/filterMetaRoutes.js";
+import segmentRoutes from "./routes/segmentRoutes.js";
 
 connectDB();
 
@@ -45,7 +46,7 @@ app.use(
       "http://localhost:5173",
       "http://localhost:5174",
       "https://gtex-sms-verification.netlify.app",
-      "https://sms-verification.netlify.app"
+      "https://sms-verification.netlify.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -58,6 +59,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use("/api/filters", filterMetaRoutes);
 app.use("/api/sms", smsRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminAuthRoutes);
@@ -66,7 +68,7 @@ app.use("/api/admin", adminSmsRoutes);
 app.use("/api/admin/sms/templates", adminSmsTemplateRoutes);
 app.use("/api/admin", adminSmsHistoryRoutes);
 app.use("/api/admin", adminSmsCampain);
-
+app.use("/api/admin/segments", segmentRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "title2" });

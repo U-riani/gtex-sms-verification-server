@@ -1,3 +1,4 @@
+//routes/adminRoutes.js
 import express from "express";
 import { requireAdmin } from "../middlewares/adminAuth.js";
 import {

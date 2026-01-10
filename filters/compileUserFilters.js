@@ -31,6 +31,11 @@ export function compileCondition(cond) {
 
     case "contains_none":
       return { [path]: { $nin: cond.values } };
+    case "in":
+      return { [path]: { $in: cond.values } };
+
+    case "not_in":
+      return { [path]: { $nin: cond.values } };
 
     default:
       return null;
