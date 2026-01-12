@@ -5,16 +5,40 @@ import User from "../models/User.js";
 export const registerUser = async (req, res) => {
   try {
     const smsEnabled =
-      req.body.promotionChanel1 === true ||
-      req.body.promotionChanel1 === "true";
+      req.body.promotionChannelSms === true ||
+      req.body.promotionChannelSms === "true";
 
     const emailEnabled =
-      req.body.promotionChanel2 === true ||
-      req.body.promotionChanel2 === "true";
+      req.body.promotionChannelEmail === true ||
+      req.body.promotionChannelEmail === "true";
+
+    if (!req.body.termsAccepted) {
+      return res.status(400).json({
+        success: false,
+        error: "Terms must be accepted",
+      });
+    }
+
+    if (!req.body.termsText || !req.body.termsLanguage) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid terms payload",
+      });
+    }
+
+    const prefix = req.body.prefix; // "+995"
+    const number = req.body.phoneNumber; // "555123456"
+    const full = (prefix + number).replace(/\D/g, "");
 
     const now = new Date();
+
+    const branch =
+      typeof req.body.branch === "string" && req.body.branch.trim()
+        ? req.body.branch.trim()
+        : "Web";
+
     const data = {
-      branch: req.body.branch,
+      branch,
       brands: req.body.brands || [],
       gender: req.body.gender,
       firstName: req.body.firstName,
@@ -23,8 +47,11 @@ export const registerUser = async (req, res) => {
       city: req.body.city || "",
       country: req.body.country || "",
       email: req.body.email || "",
-      phone: req.body.phoneNumber,
-      termsAccepted: req.body.termsAccepted,
+      phone: {
+        prefix,
+        number,
+        full,
+      },
       promoChannels: {
         sms: {
           enabled: smsEnabled,
@@ -37,6 +64,12 @@ export const registerUser = async (req, res) => {
           updatedAt: emailEnabled ? now : null,
         },
       },
+      terms: {
+        accepted: req.body.termsAccepted,
+        text: req.body.termsText,
+        language: req.body.termsLanguage,
+        acceptedAt: new Date(),
+      },
     };
     console.log(req.body.branch);
     const user = new User(data);
@@ -45,6 +78,13 @@ export const registerUser = async (req, res) => {
     return res.json({ success: true, user });
   } catch (err) {
     console.log(err);
+    if (err.code === 11000 && err.keyPattern?.["phone.full"]) {
+      return res.status(409).json({
+        success: false,
+        error: "Phone number already registered",
+      });
+    }
+
     res.status(500).json({ error: err.message });
   }
 };
@@ -70,7 +110,6 @@ export const updateUser = async (req, res) => {
       "country",
       "city",
       "email",
-      "phone",
     ];
 
     editableFields.forEach((field) => {
@@ -177,7 +216,7 @@ export const getPaginatedUsers = async (req, res) => {
     }
 
     if (req.query.phone) {
-      filter.phone = { $regex: req.query.phone, $options: "i" };
+      filter["phone.full"] = { $regex: req.query.phone };
     }
 
     if (req.query.email) {

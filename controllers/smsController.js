@@ -1,61 +1,163 @@
+// controllers/smsController.js
 import { SMS } from "@gosmsge/gosmsge-node";
 import dotenv from "dotenv";
-import User from "../models/User.js";
-dotenv.config();
+// import User from "../models/User.js";
 
-const sms = new SMS(process.env.GTEX_API_KEY);
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
+import User from "../models/User.js";
+import crypto from "crypto";
+import Otp from "../models/Otp.js";
+
+// const sms = new SMS(process.env.GTEX_API_KEY);
+const sms = new SMS(process.env.GOSMS_API_KEY);
+const generateOtp = () => Math.floor(1000 + Math.random() * 9000).toString();
+const hashOtp = (otp) => crypto.createHash("sha256").update(otp).digest("hex");
 
 export const sendOtp = async (req, res) => {
   try {
-    const { phoneNumber } = req.body;
-    console.log(phoneNumber)
-    if (!phoneNumber)
-      return res.status(400).json({ error: "Phone number required" });
+    const { phoneNumber, selectedBrands, language } = req.body;
+    const normalizedPhone = String(phoneNumber || "")
+      .replace(/\D/g, "")
+      .trim();
 
-    // 🔍 1. Check if user already exists
-    const existingUser = await User.findOne({ phone: phoneNumber }).lean();
+    const safeLang = ["en", "ka", "ru"].includes(language) ? language : "en";
 
-    if (existingUser) {
-      return res.status(409).json({
+    if (!normalizedPhone) {
+      return res.status(400).json({
         success: false,
-        error: "Phone number already registered",
+        error: "Phone number required",
       });
     }
 
-    // // 📲 2. Send OTP
-    const result = await sms.sendOtp(phoneNumber);
+    // // 🚫 BLOCK DUPLICATE PHONE EARLY
+    // const existingUser = await User.findOne({
+    //   "phone.full": normalizedPhone,
+    // });
 
-    console.log("OTP sent:", result);
+    // if (existingUser) {
+    //   return res.status(409).json({
+    //     success: false,
+    //     error: "Phone number already registered",
+    //   });
+    // }
 
-    // result.hash MUST be stored on your server, tied to phoneNumber  //265178 766956
-    return res.json({
-      success: true,
-      hash: result.hash,
-      balance: result.balance,
-    });
+    const otp = generateOtp();
+    const otpHash = hashOtp(otp);
+
+    const normalizedBrands = (selectedBrands || []).map((b) =>
+      encodeURIComponent(b.trim())
+    );
+
+    const safeBrands = Array.isArray(selectedBrands)
+      ? selectedBrands.map((b) => b.trim()).sort()
+      : [];
+
+    const urlBrands =
+      normalizedBrands && normalizedBrands.length > 0
+        ? normalizedBrands.join("-")
+        : "default";
+
+    await Otp.findOneAndUpdate(
+      { phoneNumber: normalizedPhone },
+      {
+        otpHash,
+        brands: safeBrands,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      },
+      { upsert: true, new: true }
+    );
+
+    //     await sms.send(
+    //       normalizedPhone,
+    //       `Your verification code is:
+    // ${otp}
+    // Please read Terms & Conditions:
+    // http://gtex-sms-verification.netlify.app/terms-and-conditions/${urlBrands}`,
+    //       "GTEX"
+    //     );
+
+    await sms.send(
+      normalizedPhone,
+      `Your verification code is: 
+${otp}
+Please read Terms & Conditions:
+http://gtex-sms-verification.netlify.app/${safeLang}/terms-and-conditions/${urlBrands}`,
+      "UniStep"
+    );
+
+    return res.json({ success: true });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+    });
   }
 };
 
 export const verifyOtp = async (req, res) => {
   try {
-    const { phoneNumber, hash, code } = req.body;
+    const { phoneNumber, code, brands } = req.body;
 
-    if (!phoneNumber || !hash || !code)
+    const normalizedPhone = String(phoneNumber || "")
+      .replace(/\D/g, "")
+      .trim();
+
+    if (!normalizedPhone || !code) {
       return res.status(400).json({ error: "Missing fields" });
-
-    const result = await sms.verifyOtp(phoneNumber, hash, code);
-
-    if (result.verify) {
-      return res.json({ success: true });
     }
 
-    return res.status(400).json({
-      success: false,
-      message: result.error || "Invalid code",
-    });
+    if (!Array.isArray(brands)) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing verification context",
+      });
+    }
+    const record = await Otp.findOne({ phoneNumber: normalizedPhone });
+
+    if (!record) {
+      return res.status(400).json({
+        success: false,
+        message: "Code expired or not found",
+      });
+    }
+
+    const safeRequestBrands = brands.map((b) => b.trim()).sort();
+    const safeRecordBrands = record.brands.slice().sort();
+
+    const sameBrands =
+      safeRequestBrands.length === safeRecordBrands.length &&
+      safeRequestBrands.every((b, i) => b === safeRecordBrands[i]);
+    if (!sameBrands) {
+      await Otp.deleteOne({ phoneNumber: normalizedPhone });
+      return res.status(400).json({
+        success: false,
+        message: "Verification context changed",
+      });
+    }
+
+    if (Date.now() > record.expiresAt.getTime()) {
+      await Otp.deleteOne({ phoneNumber: normalizedPhone });
+      return res.status(400).json({
+        success: false,
+        message: "Code expired",
+      });
+    }
+
+    const isValid = hashOtp(code) === record.otpHash;
+
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid code",
+      });
+    }
+
+    await Otp.deleteOne({ phoneNumber: normalizedPhone });
+
+    return res.json({ success: true });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });

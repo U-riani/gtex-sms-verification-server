@@ -15,8 +15,22 @@ const userSchema = new mongoose.Schema(
     country: String,
     city: String,
     email: String,
-    phone: String,
-    termsAccepted: { type: Boolean, required: true },
+    phone: {
+      prefix: {
+        type: String, // "+995"
+        required: true,
+      },
+      number: {
+        type: String, // "555123456"
+        required: true,
+      },
+      full: {
+        type: String, // "995555123456"
+        required: true,
+        unique: true,
+        index: true,
+      },
+    },
     promoChannels: {
       sms: {
         enabled: { type: Boolean, default: false },
@@ -27,6 +41,24 @@ const userSchema = new mongoose.Schema(
         enabled: { type: Boolean, default: false },
         createdAt: { type: Date, default: null },
         updatedAt: { type: Date, default: null },
+      },
+    },
+    terms: {
+      accepted: {
+        type: Boolean,
+        required: true,
+      },
+      text: {
+        type: String,
+        required: true,
+      },
+      language: {
+        type: String,
+        required: true,
+      },
+      acceptedAt: {
+        type: Date,
+        required: true,
       },
     },
   },
