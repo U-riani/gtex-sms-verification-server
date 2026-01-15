@@ -83,7 +83,7 @@ export const sendOtp = async (req, res) => {
       `Your verification code is: 
 ${otp}
 Please read Terms & Conditions:
-http://gtex-sms-verification.netlify.app/${safeLang}/terms-and-conditions/${urlBrands}`,
+http://gtex-sms-verification.netlify.app/terms-and-conditions/${safeLang}/${urlBrands}`,
       "UniStep"
     );
 
