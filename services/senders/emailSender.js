@@ -1,3 +1,5 @@
+// server/services/sender/emailSemder.js
+
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
@@ -9,11 +11,29 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendEmail(cfg, user, message) {
-  if (!user.email) throw new Error("User has no email");
+  if (!user?.email) {
+    return {
+      success: false,
+      error: "User has no email",
+    };
+  }
 
-  await transporter.sendMail({
-    to: user.email,
-    subject: cfg.subject || "Notification",
-    text: message,
-  });
+  try {
+    const info = await transporter.sendMail({
+      to: user.email,
+      subject: cfg.subject || "Notification",
+      text: message,
+    });
+
+    return {
+      success: true,
+      providerId: info.messageId,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
 }
+

@@ -4,9 +4,9 @@ import { requireAdmin } from "../middlewares/adminAuth.js";
 import {
   getSmsHistory,
   exportSmsHistoryCsv,
+  advancedSmsHistorySearch,
 } from "../controllers/adminSmsHistoryController.js";
 import { retryFailedSms } from "../controllers/adminSmsRetryController.js";
-import { getTemplateStats } from "../controllers/adminSmsAnalyticsController.js";
 
 const router = express.Router();
 
@@ -21,6 +21,6 @@ router.post("/sms/retry", retryFailedSms);
 // CSV export (GET!)
 router.get("/sms/history/export", exportSmsHistoryCsv);
 
-router.get("/sms/analytics/templates", getTemplateStats);
+router.post("/sms/history/advanced", advancedSmsHistorySearch);
 
 export default router;

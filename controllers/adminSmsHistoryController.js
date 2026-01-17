@@ -1,6 +1,6 @@
 // server/controllers/adminSmsHistoryController.js
-// server/controllers/adminSmsHistoryController.js
 import SmsHistory from "../models/SmsHistory.js";
+import { compileSmsHistoryAdvancedFilter } from "../filters/compileSmsHistoryFilters.js";
 
 export const getSmsHistory = async (req, res) => {
   try {
@@ -93,5 +93,34 @@ export const exportSmsHistoryCsv = async (req, res) => {
   } catch (err) {
     console.error("CSV export error:", err);
     res.status(500).json({ error: "Failed to export CSV" });
+  }
+};
+
+
+export const advancedSmsHistorySearch = async (req, res) => {
+  try {
+    const { filter, page = 1, limit = 20 } = req.body;
+
+    const mongoFilter = compileSmsHistoryAdvancedFilter(filter);
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      SmsHistory.find(mongoFilter)
+        .populate("userId", "firstName lastName")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      SmsHistory.countDocuments(mongoFilter),
+    ]);
+
+    res.json({
+      items,
+      page,
+      totalPages: Math.ceil(total / limit),
+      total,
+    });
+  } catch (err) {
+    console.error("Advanced SMS history filter error:", err);
+    res.status(500).json({ error: "Advanced SMS history filter failed" });
   }
 };

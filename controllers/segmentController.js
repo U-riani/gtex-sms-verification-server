@@ -84,6 +84,59 @@ export const listSegments = async (req, res) => {
   res.json(segments);
 };
 
+export const getSegmentById = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid segment id" });
+  }
+
+  const result = await Segment.aggregate([
+    {
+      $match: { _id: new mongoose.Types.ObjectId(id) },
+    },
+    {
+      $lookup: {
+        from: "segmentusers",
+        let: { sid: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$segmentId", "$$sid"] },
+                  {
+                    $or: [
+                      { $eq: ["$deletedAt", null] },
+                      { $not: ["$deletedAt"] },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        as: "users",
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        createdAt: 1,
+        count: { $size: "$users" },
+      },
+    },
+  ]);
+
+  if (!result.length) {
+    return res.status(404).json({ message: "Segment not found" });
+  }
+
+  res.json({
+    segment: result[0],
+  });
+};
+
 export const getSegmentUsers = async (req, res) => {
   const { id } = req.params;
   const { page = 1, limit = 20 } = req.query;

@@ -1,12 +1,12 @@
-// server/routes/adminSmsHistoryRoutes.js
-import express from "express";
-import { requireAdmin } from "../middlewares/adminAuth.js";
-import { getSmsCampaigns } from "../controllers/adminSmsCampaignController.js";
+// // server/routes/adminSmsHistoryRoutes.js
+// import express from "express";
+// import { requireAdmin } from "../middlewares/adminAuth.js";
+// import { getSmsCampaigns } from "../controllers/adminSmsCampaignController.js";
 
-const router = express.Router();
+// const router = express.Router();
 
-router.use(requireAdmin);
+// router.use(requireAdmin);
 
-router.get("/sms/campaigns", getSmsCampaigns);
+// router.get("/sms/campaigns", getSmsCampaigns);
 
-export default router;
+// export default router;

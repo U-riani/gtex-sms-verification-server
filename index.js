@@ -12,7 +12,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import adminSmsRoutes from "./routes/adminSmsRoutes.js";
 import adminSmsTemplateRoutes from "./routes/adminSmsTemplateRoutes.js";
 import adminSmsHistoryRoutes from "./routes/adminSmsHistoryRoutes.js";
-import adminSmsCampain from "./routes/adminSmsCampainRoute.js";
+import adminSmsCampain from "./routes/adminSmsCampaignRoutes.js";
 import filterMetaRoutes from "./routes/filterMetaRoutes.js";
 import segmentRoutes from "./routes/segmentRoutes.js";
 
@@ -48,7 +48,7 @@ app.use(
       "https://gtex-sms-verification.netlify.app",
       "https://sms-verification.netlify.app",
     ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );

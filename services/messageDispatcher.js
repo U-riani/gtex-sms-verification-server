@@ -1,3 +1,4 @@
+// server/services/messageDispatcher.js
 import { sendSms } from "./senders/smsSender.js";
 import { sendEmail } from "./senders/emailSender.js";
 import { sendWhatsApp } from "./senders/whatsappSender.js";
@@ -19,6 +20,9 @@ export async function dispatchMessage({
       return sendWhatsApp(providerConfig, user, message);
 
     default:
-      throw new Error("Unsupported channel: " + channel);
+      return {
+        success: false,
+        error: `Unsupported channel: ${channel}`,
+      };
   }
 }

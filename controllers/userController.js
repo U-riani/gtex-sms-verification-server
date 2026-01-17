@@ -1,6 +1,7 @@
 //controllers/userController.js
 
 import User from "../models/User.js";
+const ALLOWED_LIMITS = [20, 50, 100, 1000, 5000, 10000];
 
 export const registerUser = async (req, res) => {
   try {
@@ -118,6 +119,17 @@ export const updateUser = async (req, res) => {
       }
     });
 
+    if (req.body.phone) {
+      const { prefix, number } = req.body.phone;
+
+      if (prefix && number) {
+        const full = (prefix + number).replace(/\D/g, "");
+
+        user.phone.prefix = prefix;
+        user.phone.number = number;
+        user.phone.full = full;
+      }
+    }
     // -----------------------
     //   UPDATE PROMO CHANNELS
     // -----------------------
@@ -200,8 +212,11 @@ export const getUser = async (req, res) => {
 
 export const getPaginatedUsers = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const rawPage = Number(req.query.page);
+    const rawLimit = Number(req.query.limit);
+
+    const page = rawPage > 0 ? rawPage : 1;
+    const limit = ALLOWED_LIMITS.includes(rawLimit) ? rawLimit : 20;
     const skip = (page - 1) * limit;
 
     const filter = {};
@@ -247,17 +262,19 @@ export const getPaginatedUsers = async (req, res) => {
       filter.brands = req.query.brand;
     }
 
-    const users = await User.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .select("-__v");
-
-    const total = await User.countDocuments(filter);
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select("-__v"),
+      User.countDocuments(filter),
+    ]);
 
     res.json({
       success: true,
       page,
+      limit,
       totalUsers: total,
       totalPages: Math.ceil(total / limit),
       users,

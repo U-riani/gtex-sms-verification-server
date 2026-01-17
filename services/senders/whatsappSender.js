@@ -1,3 +1,8 @@
+// server/services/sender/emailSemder.js
+
 export async function sendWhatsApp(cfg, user, message) {
-  throw new Error("WhatsApp not configured yet");
+  return {
+    success: false,
+    error: "WhatsApp sender not implemented",
+  };
 }
