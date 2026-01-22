@@ -2,6 +2,14 @@
 
 import User from "../models/User.js";
 const ALLOWED_LIMITS = [20, 50, 100, 1000, 5000, 10000];
+const mapUserForTable = (user) => {
+  const u = user.toObject();
+
+  return {
+    ...u,
+    phone: u.phone?.full || "",
+  };
+};
 
 export const registerUser = async (req, res) => {
   try {
@@ -173,7 +181,7 @@ export const updateUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-__v");
+    const users = await User.find().sort({ createdAt: -1 }).select("-__v");
 
     return res.json({
       success: true,
@@ -262,7 +270,7 @@ export const getPaginatedUsers = async (req, res) => {
       filter.brands = req.query.brand;
     }
 
-    const [users, total] = await Promise.all([
+    const [usersRaw, total] = await Promise.all([
       User.find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -270,6 +278,8 @@ export const getPaginatedUsers = async (req, res) => {
         .select("-__v"),
       User.countDocuments(filter),
     ]);
+
+    const users = usersRaw.map(mapUserForTable);
 
     res.json({
       success: true,

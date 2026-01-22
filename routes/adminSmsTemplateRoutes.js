@@ -6,6 +6,7 @@ import {
   getTemplateById,
   createTemplate,
   deleteTemplate,
+  updateTemplate,
 } from "../controllers/adminSmsTemplateController.js";
 
 const router = express.Router();
@@ -13,8 +14,9 @@ const router = express.Router();
 router.use(requireAdmin);
 
 router.get("/", getTemplates);
-router.get("/:id", getTemplateById); 
+router.get("/:id", getTemplateById);
 router.post("/", createTemplate);
+router.put("/:id", updateTemplate);
 router.delete("/:id", deleteTemplate);
 
 export default router;

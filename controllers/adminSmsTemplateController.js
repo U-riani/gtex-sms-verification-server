@@ -44,6 +44,32 @@ export const createTemplate = async (req, res) => {
   res.json({ success: true, template });
 };
 
+export const updateTemplate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, brand, content } = req.body;
+
+    if (!name || !brand || !content) {
+      return res.status(400).json({ error: "Missing fields" });
+    }
+
+    const template = await SmsTemplate.findByIdAndUpdate(
+      id,
+      { name, brand, content },
+      { new: true }
+    );
+
+    if (!template) {
+      return res.status(404).json({ error: "Template not found" });
+    }
+
+    res.json({ success: true, template });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update template" });
+  }
+};
+
 export const deleteTemplate = async (req, res) => {
   await SmsTemplate.findByIdAndDelete(req.params.id);
   res.json({ success: true });

@@ -15,6 +15,7 @@ import adminSmsHistoryRoutes from "./routes/adminSmsHistoryRoutes.js";
 import adminSmsCampain from "./routes/adminSmsCampaignRoutes.js";
 import filterMetaRoutes from "./routes/filterMetaRoutes.js";
 import segmentRoutes from "./routes/segmentRoutes.js";
+import dashboard from "./routes/adminDashboardROutes.js";
 
 connectDB();
 
@@ -69,6 +70,7 @@ app.use("/api/admin/sms/templates", adminSmsTemplateRoutes);
 app.use("/api/admin", adminSmsHistoryRoutes);
 app.use("/api/admin", adminSmsCampain);
 app.use("/api/admin/segments", segmentRoutes);
+app.use("/api/admin/dashboard", dashboard);
 
 app.get("/", (req, res) => {
   res.json({ message: "title2" });

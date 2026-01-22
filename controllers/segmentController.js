@@ -4,6 +4,15 @@ import SegmentUser from "../models/SegmentUser.js";
 import Segment from "../models/Segment.js";
 import crypto from "crypto";
 
+const mapUserForTable = (u) => {
+  if (!u) return null;
+
+  return {
+    ...u,
+    phone: u.phone?.full || "",
+  };
+};
+
 export const createSegment = async (req, res) => {
   const { name, userIds = [] } = req.body;
 
@@ -32,7 +41,7 @@ export const createSegment = async (req, res) => {
       {
         $set: { deletedAt: null },
         $unset: { deleteToken: "" },
-      }
+      },
     );
 
     const rows = validIds.map((uid) => ({
@@ -47,7 +56,9 @@ export const createSegment = async (req, res) => {
 };
 
 export const listSegments = async (req, res) => {
-  const segments = await Segment.aggregate([
+  const segments = await Segment.aggregate([ {
+      $sort: { createdAt: -1 }, // 🔥 newest first
+    },
     {
       $lookup: {
         from: "segmentusers",
@@ -148,15 +159,17 @@ export const getSegmentUsers = async (req, res) => {
 
   const [rows, total] = await Promise.all([
     SegmentUser.find(query)
-      .skip((page - 1) * limit)
+      .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit))
       .populate("userId")
-      .lean(),
+      .lean(), // KEEP lean
     SegmentUser.countDocuments(query),
   ]);
 
+  const users = rows.map((r) => mapUserForTable(r.userId)).filter(Boolean);
+
   res.json({
-    users: rows.map((r) => r.userId),
+    users,
     total,
     page: Number(page),
     limit: Number(limit),
@@ -177,7 +190,7 @@ export const removeUserFromSegment = async (req, res) => {
         deletedAt: new Date(),
         deleteToken,
       },
-    }
+    },
   );
 
   res.json({
@@ -217,7 +230,7 @@ export const addUsersToSegment = async (req, res) => {
     {
       $set: { deletedAt: null },
       $unset: { deleteToken: "" },
-    }
+    },
   );
 
   const rows = validIds.map((uid) => ({
@@ -226,7 +239,7 @@ export const addUsersToSegment = async (req, res) => {
   }));
 
   const result = await SegmentUser.insertMany(rows, { ordered: false }).catch(
-    () => []
+    () => [],
   );
 
   res.json({
@@ -242,7 +255,7 @@ export const undoRemoveUserFromSegment = async (req, res) => {
     {
       $set: { deletedAt: null },
       $unset: { deleteToken: "" },
-    }
+    },
   );
 
   res.json({
