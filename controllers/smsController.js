@@ -47,7 +47,7 @@ export const sendOtp = async (req, res) => {
     const otpHash = hashOtp(otp);
 
     const normalizedBrands = (selectedBrands || []).map((b) =>
-      encodeURIComponent(b.trim())
+      encodeURIComponent(b.trim()),
     );
 
     const safeBrands = Array.isArray(selectedBrands)
@@ -66,25 +66,25 @@ export const sendOtp = async (req, res) => {
         brands: safeBrands,
         expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     //     await sms.send(
     //       normalizedPhone,
-    //       `Your verification code is:
+    //       `ვერიფიკაციის კოდი: 
     // ${otp}
-    // Please read Terms & Conditions:
+    // წესები და პირობები:
     // http://gtex-sms-verification.netlify.app/terms-and-conditions/${urlBrands}`,
     //       "GTEX"
     //     );
 
     await sms.send(
       normalizedPhone,
-      `Your verification code is: 
+      `ვერიფიკაციის კოდი: 
 ${otp}
-Please read Terms & Conditions:
+წესები და პირობები:
 http://gtex-sms-verification.netlify.app/terms-and-conditions/${safeLang}/${urlBrands}`,
-      "UniStep"
+      "UniStep",
     );
 
     return res.json({ success: true });
