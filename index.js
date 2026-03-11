@@ -66,10 +66,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/admin", adminAuthRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminSmsRoutes);
-app.use("/api/admin/sms/templates", adminSmsTemplateRoutes);
+app.use("/api/admin/sms", adminSmsTemplateRoutes);
 app.use("/api/admin", adminSmsHistoryRoutes);
 app.use("/api/admin", adminSmsCampain);
-app.use("/api/admin/segments", segmentRoutes);
+app.use("/api/admin", segmentRoutes);
 app.use("/api/admin", dashboard);
 
 app.get("/", (req, res) => {

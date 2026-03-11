@@ -13,10 +13,10 @@ const router = express.Router();
 
 router.use(requireAdmin);
 
-router.get("/", getTemplates);
-router.get("/:id", getTemplateById);
-router.post("/", createTemplate);
-router.put("/:id", updateTemplate);
-router.delete("/:id", deleteTemplate);
+router.get("/templates", getTemplates);
+router.get("/templates/:id", getTemplateById);
+router.post("/templates", createTemplate);
+router.put("/templates/:id", updateTemplate);
+router.delete("/templates/:id", deleteTemplate);
 
 export default router;
