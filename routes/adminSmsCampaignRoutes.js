@@ -7,8 +7,7 @@ const router = express.Router();
 
 router.use(requireAdmin);
 
-router.post("/sms/campaigns", startSmsCampaign);
-router.get("/sms/campaigns", listCampaigns);
-router.get("/sms/campaigns/:id", getCampaignDetails);
-
+router.post("/", startSmsCampaign);
+router.get("/", listCampaigns);
+router.get("/:id", getCampaignDetails);
 export default router;

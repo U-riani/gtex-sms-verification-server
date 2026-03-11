@@ -1,4 +1,4 @@
-// routes/segmentRoutes.js
+// server/routes/segmentRoutes.js
 import express from "express";
 import {
   createSegment,
@@ -16,12 +16,12 @@ const router = express.Router();
 
 router.use(requireAdmin);
 
-router.get("/segments", listSegments);
-router.get("/segments/:id", getSegmentById);
-router.get("/segments/:id/users", getSegmentUsers);
-router.post("/segments", createSegment);
-router.post("/segments/undo", undoRemoveUserFromSegment);
-router.post("/segments/:id/users", addUsersToSegment);
-router.delete("/segments/:segmentId/users/:userId", removeUserFromSegment);
-router.delete("/segments/:id", deleteSegment);
+router.get("/", listSegments);
+router.get("/:id", getSegmentById);
+router.get("/:id/users", getSegmentUsers);
+router.post("/", createSegment);
+router.post("/undo", undoRemoveUserFromSegment);
+router.post("/:id/users", addUsersToSegment);
+router.delete("/:segmentId/users/:userId", removeUserFromSegment);
+router.delete("/:id", deleteSegment);
 export default router;

@@ -1,3 +1,5 @@
+// server/routes/smsRoutes.js
+
 import express from "express";
 import { sendOtp, createSender, verifyOtp } from "../controllers/smsController.js";
 

@@ -13,14 +13,9 @@ const router = express.Router();
 router.use(requireAdmin);
 
 // history list
-router.get("/sms/history", getSmsHistory);
-
-// retry failed
-router.post("/sms/retry", retryFailedSms);
-
-// CSV export (GET!)
-router.get("/sms/history/export", exportSmsHistoryCsv);
-
-router.post("/sms/history/advanced", advancedSmsHistorySearch);
+router.get("/", getSmsHistory);
+router.post("/retry", retryFailedSms);
+router.get("/export", exportSmsHistoryCsv);
+router.post("/advanced", advancedSmsHistorySearch);
 
 export default router;

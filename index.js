@@ -51,7 +51,7 @@ app.use(
     ],
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 // Debug logging
@@ -63,14 +63,14 @@ app.use((req, res, next) => {
 app.use("/api/filters", filterMetaRoutes);
 app.use("/api/sms", smsRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/admin", adminAuthRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/admin", adminSmsRoutes);
-app.use("/api/admin/sms", adminSmsTemplateRoutes);
-app.use("/api/admin", adminSmsHistoryRoutes);
-app.use("/api/admin", adminSmsCampain);
-app.use("/api/admin", segmentRoutes);
-app.use("/api/admin", dashboard);
+
+app.use("/api/admin/auth", adminAuthRoutes);
+app.use("/api/admin/users", adminRoutes);
+app.use("/api/admin/templates", adminSmsTemplateRoutes);
+app.use("/api/admin/history", adminSmsHistoryRoutes);
+app.use("/api/admin/campaigns", adminSmsCampain);
+app.use("/api/admin/segments", segmentRoutes);
+app.use("/api/admin/dashboard", dashboard);
 
 app.get("/", (req, res) => {
   res.json({ message: "title2" });

@@ -1,4 +1,4 @@
-// server/routes/segmentRoutes.js
+// server/routes/adminDashboardROutes.js
 import express from "express";
 import {
 dashboardStats
@@ -9,6 +9,6 @@ const router = express.Router();
 
 router.use(requireAdmin);
 
-router.get("/dashboard", dashboardStats);
+router.get("/", dashboardStats);
 
 export default router;

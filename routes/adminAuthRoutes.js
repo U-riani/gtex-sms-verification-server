@@ -1,3 +1,4 @@
+// server/routes/adminAuthRoutes.js
 import express from "express";
 import { loginAdmin } from "../controllers/adminAuthController.js";
 
