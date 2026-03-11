@@ -1,4 +1,4 @@
-// Load environment variables
+// server/index.js
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -70,7 +70,7 @@ app.use("/api/admin/sms/templates", adminSmsTemplateRoutes);
 app.use("/api/admin", adminSmsHistoryRoutes);
 app.use("/api/admin", adminSmsCampain);
 app.use("/api/admin/segments", segmentRoutes);
-app.use("/api/admin/dashboard", dashboard);
+app.use("/api/admin", dashboard);
 
 app.get("/", (req, res) => {
   res.json({ message: "title2" });

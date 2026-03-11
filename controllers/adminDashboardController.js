@@ -1,3 +1,4 @@
+// server/controllers/adminDashboardController.js
 import User from "../models/User.js";
 import SmsTemplate from "../models/SmsTemplate.js";
 import Segment from "../models/Segment.js";
