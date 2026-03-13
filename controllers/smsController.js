@@ -11,7 +11,7 @@ import crypto from "crypto";
 import Otp from "../models/Otp.js";
 
 // const sms = new SMS(process.env.GTEX_API_KEY);
-const sms = new SMS(process.env.GOSMS_API_KEY);
+const sms = new SMS(process.env.GTEX_API_KEY);
 const generateOtp = () => Math.floor(1000 + Math.random() * 9000).toString();
 const hashOtp = (otp) => crypto.createHash("sha256").update(otp).digest("hex");
 
@@ -69,23 +69,22 @@ export const sendOtp = async (req, res) => {
       { upsert: true, new: true },
     );
 
-    //     await sms.send(
-    //       normalizedPhone,
-    //       `ვერიფიკაციის კოდი: 
-    // ${otp}
-    // წესები და პირობები:
-    // http://gtex-sms-verification.netlify.app/terms-and-conditions/${urlBrands}`,
-    //       "GTEX"
-    //     );
-
-    await sms.send(
-      normalizedPhone,
-      `ვერიფიკაციის კოდი: 
-${otp}
+        await sms.send(
+          normalizedPhone,
+          `ვერიფიკაციის კოდი: ${otp}
 წესები და პირობები:
-http://gtex-sms-verification.netlify.app/terms-and-conditions/${safeLang}/${urlBrands}`,
-      "UniStep",
-    );
+http://gtex-sms-verification.netlify.app/terms-and-conditions/${urlBrands}`,
+          "GTEX"
+        );
+
+//     await sms.send(
+//       normalizedPhone,
+//       `ვერიფიკაციის კოდი: 
+// ${otp}
+// წესები და პირობები:
+// http://gtex-sms-verification.netlify.app/terms-and-conditions/${safeLang}/${urlBrands}`,
+//       "UniStep",
+//     );
 
     return res.json({ success: true });
   } catch (err) {
