@@ -69,23 +69,23 @@ export const sendOtp = async (req, res) => {
       { upsert: true, new: true },
     );
 
-    //     await sms.send(
-    //       normalizedPhone,
-    //       `ვერიფიკაციის კოდი: 
-    // ${otp}
-    // წესები და პირობები:
-    // http://gtex-sms-verification.netlify.app/terms-and-conditions/${urlBrands}`,
-    //       "GTEX"
-    //     );
+        await sms.send(
+          normalizedPhone,
+          `ვერიფიკაციის კოდი: 
+    ${otp}
+    წესები და პირობები:
+    http://gtex-sms-verification.netlify.app/terms-and-conditions/${urlBrands}`,
+          "GTEX"
+        );
 
-    await sms.send(
-      normalizedPhone,
-      `ვერიფიკაციის კოდი: 
-${otp}
-წესები და პირობები:
-http://gtex-sms-verification.netlify.app/terms-and-conditions/${safeLang}/${urlBrands}`,
-      "UniStep",
-    );
+//     await sms.send(
+//       normalizedPhone,
+//       `ვერიფიკაციის კოდი: 
+// ${otp}
+// წესები და პირობები:
+// http://gtex-sms-verification.netlify.app/terms-and-conditions/${safeLang}/${urlBrands}`,
+//       "UniStep",
+//     );
 
     return res.json({ success: true });
   } catch (err) {
