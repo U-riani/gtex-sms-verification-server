@@ -71,7 +71,7 @@ export const sendOtp = async (req, res) => {
 
         await sms.send(
           normalizedPhone,
-          `ვერიფიკაციის კოდი: ${otp}
+          `კოდი: ${otp}
 წესები და პირობები:
 http://gtex-sms-verification.netlify.app/terms-and-conditions/${urlBrands}`,
           "GTEX"
