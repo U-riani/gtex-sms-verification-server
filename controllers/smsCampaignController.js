@@ -63,8 +63,8 @@ export const startSmsCampaign = async (req, res) => {
     const result = await dispatchMessage({
       channel: "sms",
       providerConfig: {
-        apiKey: process.env.GOSMS_API_KEY,
-        sender: "UniStep",
+        apiKey: process.env.GTEX_API_KEY,
+        sender: "GTEX",
       },
       user,
       message: finalMessage,
